@@ -1,38 +1,26 @@
-import http.server
-import socketserver
-import os
-import urllib.parse
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
+class MyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            file_path = urllib.parse.unquote(self.path)
-            file_path = file_path.lstrip('/')
-            file_path = os.path.join(os.getcwd(), file_path)
-
-            if not os.path.exists(file_path) or not os.path.isfile(file_path):
-                self.send_error(404, "Файл не найден")
-                return
-
-            with open(file_path, 'rb') as file:
-                file_content = file.read()
-
+            file_path = self.path[1:]
+            file_content = open(file_path, encoding='utf-8').read()
             self.send_response(200)
             self.send_header('Content-type', 'text/plain; charset=utf-8')
             self.end_headers()
-            self.wfile.write(file_content)
+            self.wfile.write(bytes(file_content, 'utf-8'))
+        except FileNotFoundError:
+            self.send_response(404)
+            self.send_header('Content-type', 'text/plain; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(bytes("Файл не найден", 'utf-8'))
 
-        except Exception as e:
-            self.send_error(500, str(e))
+def run():
+    print('Запуск сервера...')
+    server_address = ('', 8080)
+    httpd = HTTPServer(server_address, MyHandler)
+    print('Сервер работает на порту 8080')
 
-def run_server(port):
-    try:
-        handler = MyRequestHandler
-        with socketserver.TCPServer(("", port), handler) as httpd:
-            print(f"Serving at port {port}")
-            httpd.serve_forever()
-    except OSError as e:
-        print(f"Error starting server: {e}")
+    httpd.serve_forever()
 
-if __name__ == "__main__":
-    run_server(8000)
+run()
