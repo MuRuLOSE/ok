@@ -4,6 +4,8 @@ class MyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             file_path = self.path[1:]
+            if not file_path.startswith('modules/'):
+                raise FileNotFoundError
             file_content = open(file_path, encoding='utf-8').read()
             self.send_response(200)
             self.send_header('Content-type', 'text/plain; charset=utf-8')
