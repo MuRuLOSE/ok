@@ -16,6 +16,11 @@ class MyHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/plain; charset=utf-8')
             self.end_headers()
             self.wfile.write(bytes("Файл не найден", 'utf-8'))
+        except IsADirectoryError:
+            self.send_response(400)
+            self.send_header('Content-type', 'text/plain; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(bytes("Вы попытались открыть директорию", 'utf-8'))
 
 def run():
     print('Запуск сервера...')
